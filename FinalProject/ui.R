@@ -5,15 +5,15 @@ library(caret)
 library(mathjaxr)
 
 
-data <- read_csv("insurance.csv")
+hlthdta <- read_csv("insurance.csv")
 
-data$sex <- as.factor(data$sex)
-data$smoker <- as.factor(data$smoker)
-data$region <- as.factor(data$region)
+hlthdta$sex <- as.factor(hlthdta$sex)
+hlthdta$smoker <- as.factor(hlthdta$smoker)
+hlthdta$region <- as.factor(hlthdta$region)
 
-levels(data$sex) <- c("male","female")
-levels(data$smoke) <- c("yes","no")
-levels(data$region) <- c("southwest","southeast","northwest","northeast")
+levels(hlthdta$sex) <- c("male","female")
+levels(hlthdta$smoke) <- c("yes","no")
+levels(hlthdta$region) <- c("southwest","southeast","northwest","northeast")
 
 
 # Define UI for application 
@@ -47,11 +47,11 @@ tabPanel("Data Exploration",
                      
                      conditionalPanel(
                        condition = "input.RB == BP",
-                       checkboxGroupInput("rgn", "Which region would you like to see?", c("All",levels(as.factor(data$region)))),
+                       checkboxGroupInput("rgn", "Which region would you like to see?", c("All",levels(as.factor(hlthdta$region)))),
                        condition = "input.RB == CF", 
-                       checkboxGroupInput("sx", "Which sex would you like to see?", c("All",levels(as.factor(data$sex)))),
+                       checkboxGroupInput("sx", "Which sex would you like to see?", c("All",levels(as.factor(hlthdta$sex)))),
                        condition = "input.RB == KD", 
-                       checkboxGroupInput("sm", "Which smoker usage status would you like to see?", c("All",levels(as.factor(data$smoker))))),
+                       checkboxGroupInput("sm", "Which smoker usage status would you like to see?", c("All",levels(as.factor(hlthdta$smoker))))),
                      
                      br(),
                      
@@ -66,11 +66,11 @@ tabPanel("Data Exploration",
   #Conditional Panel for Numerical Summaries
   conditionalPanel(
 condition = "input.NM == CM",
-checkboxGroupInpu("rgn1", "Which region would you like to see?", c("All",levels(as.factor(data$region)))),
+checkboxGroupInpu("rgn1", "Which region would you like to see?", c("All",levels(as.factor(hlthdta$region)))),
 condition = "input.NM == SM", 
-checkboxGroupInput("sx1", "Which sex would you like to see?",  c("All",levels(as.factor(data$sex)))),
+checkboxGroupInput("sx1", "Which sex would you like to see?",  c("All",levels(as.factor(hlthdta$sex)))),
 condition = "input.NM == SB", 
-checkboxGroupInpu("sm1", "Which smoker usage status would you like to see?", c("All",levels(as.factor(data$smoker))))),
+checkboxGroupInpu("sm1", "Which smoker usage status would you like to see?", c("All",levels(as.factor(hlthdta$smoker))))),
 
 )),
 
@@ -84,7 +84,7 @@ mainPanel(plotOutput("DataPlot"), #dataplot for the bar graphs
 tabPanel("Modelling",
          p("This is the modelling phase of the app. The purpose of this phase is to produce supervised learning models with the data that will help explain the interation between medical bill charges and the explanatory variables for sex, age, number of children, region of residence, body mass index,and smoker status. The two models used are multiple linear regression and random forest. The Model Info subtab provides a description of each model - its purposes for analysis, advantages, and disadvantages when describing the data. The Model Fitting tab goes through the process of creating multple regression or regression tree models to the data. Finally, the prediction tab will allow you to use the explanatory variables to predict the outcome of the charges."),
          
-#Model Info tab that prvides introductions to the models 
+#Model Info tab that provides introductions to the models 
 
          tabPanel(" Modeling Info", fluidPage(
            withMathJax(),
@@ -107,16 +107,28 @@ tabPanel("Modelling",
                       
                       selectizeInput("SP", "Select the test/train split", selected = NULL, choices = c("50% train - %50 test"= "hlf","75% train - 25% test"= "svn","80% train - %20 test" ="egt" )),
                 
-                    
-                      conditionalPanel(
-                        condition = "input.NM == CM",
-                        selectizeInput("rgn1", "Which region would you like to see?", selected = "All", choices = c("All",levels(as.factor(data$region)))),
-                        condition = "input.NM == SM", 
-                        selectizeInput("sx1", "Which sex would you like to see?", selected = "All", choices = c("All",levels(as.factor(data$sex)))),
-                        condition = "input.NM == SB", 
-                        selectizeInput("sm1", "Which smoker usage status would you like to see?", selected = "All", choices = c("All",levels(as.factor(data$smoker))))),
-                      
-                    ))
+    #Grouup Select Check boxes to denote the variables used in the modelling
+    checkboxGroupInput("MLRvars", "Select the variables that you want to use in the MLR model", c("All","Age","sex","bmi","Number of Children","Smoker Status","Region of Residence")),
+    br(),
+    
+    checkboxGroupInput("RFvars", "Select the variables that you want to use in the Random Forest model", c("All","Age","sex","bmi","Number of Children","Smoker Status","Region of Residence")),
+    
+#Select Tuning Parameters and Cross Validation settings for Random Forest
+
+    conditionalPanel(
+      condition = "RFvars >= 1",
+      radioButtons(inputId ="mtry", label = "How many variables would you like to sample as a candatidate for each node in each tree?", c("2:3","4","1:5")),
+      br(),
+      radioButtons(inpputId = "fld", label ="How many folds would youl like to use for the cross validation?", choices = c("3","5","7"))),
+
+    actionButton(inputid = "fit", label = "Almost there ! Click below to fit the model",icon = "FIT")
+            ),
+      mainPanel(
+        tabsetPanel(
+          tabPanel("MLR Model Output" ,h1("Multiple Linear Regression Model Outuput"),uiOutput("SMRY"),tableOutput("FITST")),
+          tabPanel("Random Forest Model Output", h1("Random Forest Model Output"),plotOutput("RFPLT"),tableOutput("RFTBL"))
+        )
+      )
                     ))
                   ))
                   )
