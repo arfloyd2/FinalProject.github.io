@@ -6,12 +6,12 @@ library(mathjaxr)
 library(shinythemes)
 
 
-# hlthdta <- read.csv("insurance.csv")
-# 
-# hlthdta$sex <- as.factor(hlthdta$sex)
-# hlthdta$smoker <- as.factor(hlthdta$smoker)
-# hlthdta$region <- as.factor(hlthdta$region)
-# 
+  hlthdta <- read_csv('insurance.csv')
+ 
+  #  hlthdta$sex <- as.factor(hlthdta$sex)
+  # #  hlthdta$smoker <- as.factor(hlthdta$smoker)
+   hlthdta$region <- as.factor(hlthdta$region)
+
 # levels(hlthdta$sex) <- c("male","female")
 # levels(hlthdta$smoke) <- c("yes","no")
 # levels(hlthdta$region) <- c("southwest","southeast","northwest","northeast")
@@ -21,7 +21,7 @@ library(shinythemes)
 
   
   
-shinyUI(navbarPage(title = "Health Insurance Costs", collapsible = TRUE, inverse = TRUE, theme = shinytheme("spacelab"),
+shinyUI(navbarPage(title = "Health Insurance Costs", collapsible = TRUE, theme = shinytheme("spacelab"), inverse = TRUE,
         
 #Tabs that are used for the app 
 # Introduction  
@@ -33,57 +33,69 @@ shinyUI(navbarPage(title = "Health Insurance Costs", collapsible = TRUE, inverse
           br(),
 tags$img(src="cost-of-health-coverage.png", style = "width: 100%; padding: 0;")),
 
-# #Data Exploration tab 
+#Data Exploration tab
 tabPanel("Data Exploration",
 
          fluidPage(h1("Exploratory Data Analysis"),
+                   br(),
                    p("This tab conducts an exploratory data analysis to see how variables in the health insurance dataset interact each other and how the medical bill charges response behaves over variaous levels of region and smoker status."),
                    br(),
 
-                sidebarLayout( sidebarPanel(
+              sidebarPanel(
 
 # Buttons to choose for the Graphical Summaries
-                     h4("Graphical Summaries"),
+                     h3("Graphical Summaries"),
 
-                     radioButtons("RB",label = "Select the Plot Type",
+                     radioButtons(inputId = "RB",label = "Select the Plot Type",
                                 c("Summaries for Medical Bill Charges" = "BP",
                                   "Relationship Between BMI and Age" = "SC",
                                   "Medical Bill Charges by Smoker Status" = "CF",
                                   "Distribution of Age" = "KD")),
+
                      #Conditional Panel for Graph Types
 
                      conditionalPanel(
-                       condition = "input.RB == BP",
-                       checkboxGroupInput(inputId = "rgn", label = "Which region would you like to see?", choices = c("All",levels(as.factor(hlthdta$region)))),
-                       condition = "input.RB == CF",
-                       checkboxGroupInput("sx", label = "Which sex would you like to see?", choices = c("All",levels(as.factor(hlthdta$sex)))),
-                       condition = "input.RB == KD",
-                       checkboxGroupInput("sm", label = "Which smoker usage status would you like to see?", choices = c("All",levels(as.factor(hlthdta$smoker))))),
+                       condition = "input.RB  =='BP'",
+                       radioButtons(inputId = "rgn", label = "Which region would you like to see? Choose All OR a selection of region", choices = c("All","northeast","northwest","southeast","southwest"), selected = "All")),
 
-                     br(),
+                     conditionalPanel(
+                       condition = "input.RB == 'CF'",
+                       radioButtons("sx", label = "Which sex would you like to see?", choices = c("All",levels(as.factor(hlthdta$sex))), selected ="All")),
+
+                     conditionalPanel(
+                       condition = "input.RB  == 'KD'",
+                       radioButtons("sm", label = "Which smoker usage status would you like to see?", choices = c("All",levels(as.factor(hlthdta$smoker))), selected ='All')),
+
+
+                    br(),
 
                      h4("Numerical Summaries"),
 
 # Drop Down Menu for Numerical Summaries
 
-                     selectizeInput("NM", "Select which numerical summary you would like to view", selected = NULL, choices = c("Moments, Max, and Min of Charges" = "CM","Frequency of Health Contractors by Region" = "SX","Summary Values of Body Mass Index" = "SB"))
+                     selectizeInput(inputId = "NM", label = "Select which numerical summary you would like to view", selected = NULL, choices = c("Moments, Max, and Min of Charges" = "CM","Frequency of Health Contractors by Region" = "SX","Summary Values of Body Mass Index" = "SB"))
 
  ,
 
   #Conditional Panel for Numerical Summaries
-  conditionalPanel(
-condition = "input.NM == CM",
-checkboxGroupInput(inputId = "rgn1", label = "Which regions would you like to see?", choices = c("All",levels(as.factor(hlthdta$region)))),
-condition = "input.NM == SB",
-checkboxGroupInput(inputId = "sm1", label = "Which smoker usage status would you like to see?", choices = c("All",levels(as.factor(hlthdta$smoker))))),
 
-)),
+  conditionalPanel(
+condition = "input.NM == 'CM'",
+selectInput(inputId = "rgn1", label = "Which regions would you like to see?", choices = c("All",levels(as.factor(hlthdta$region))), selected = "All"),multiple = TRUE),
+
+conditionalPanel(
+condition = "input.NM == 'SB'",
+radioButtons(inputId = "sm1", label = "Which smoker usage status would you like to see?", choices = c("All",levels(as.factor(hlthdta$smoker))), selected = "All")),
+
+),
 
 # Show a plot and the numerical summaries from the options chosen
 
-mainPanel(plotOutput("DataPlot"), #dataplot for the bar graphs
-          dataTableOutput(outputId = "dataTable") #data table for the summary vaues
+mainPanel(plotOutput("DataPlot") #dataplot for the bar graphs
+          ,dataTableOutput(outputId = "dataTable") #data table for the summary vaues
 )))))
+
+
 # 
 # #Panel for Modelling the Data 
 # tabPanel("Modelling",
