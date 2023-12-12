@@ -19,3 +19,7 @@ shiny::runGitHub(
 'FinalProject.github.io', 'arfloyd2',subdir = 'FinalProject')
 
 )
+
+Line of Code to install Packages 
+
+install. packages(c("shiny", "tidyverse","caret","mathjaxr","MuMIn","Metrics","shinythemes")) 
